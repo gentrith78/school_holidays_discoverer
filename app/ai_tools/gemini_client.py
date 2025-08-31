@@ -14,7 +14,7 @@ class GeminiClient:
         self.endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
         self.session = requests.Session()
 
-    def generate(self, prompt: str) -> Dict:
+    def generate(self, prompt: str) -> str:
         """
         Send a prompt to Gemini and return parsed JSON if possible.
         """
@@ -36,16 +36,10 @@ class GeminiClient:
             resp = self.session.post(self.endpoint, headers=headers, params=params, json=body, timeout=30)
             resp.raise_for_status()
             data = resp.json()
-            text = data["candidates"][0]["content"]["parts"][0]["text"]
+            return data["candidates"][0]["content"]["parts"][0]["text"]
         except Exception as e:
             print(f"[GeminiClient] Error: {e}")
-            return {"website": None, "confidence": 0}
+            return ""
 
-        # Try to parse JSON from the model's response
-        try:
-            parsed = json.loads(text.strip("```json").strip("```").strip())
-            return parsed
-        except Exception:
-            # fallback: return raw text
-            return {"raw_text": text}
+
 

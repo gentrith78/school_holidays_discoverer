@@ -1,4 +1,5 @@
 from app.engine import entrypoint
+from app.utils import configure_logging
 from dotenv import load_dotenv
 
 load_dotenv()

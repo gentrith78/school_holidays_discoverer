@@ -1,14 +1,14 @@
 import logging
 from typing import List
 
-from app.utils import read_input_csv
+from app.utils import read_input_csv, configure_logging
 from app.data_struc import School
 from app.discover_website import discover_website
 from app.discover_holidays import discover_holidays
 
 
 def entrypoint():
-    logger = logging.getLogger()
+    logger = configure_logging()
 
     logger.info("Starting")
     logger.info("Reading Input")

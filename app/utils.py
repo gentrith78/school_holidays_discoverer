@@ -63,5 +63,6 @@ def configure_logging():
 
     return logger
 
+
 if __name__ == '__main__':
     read_input_csv()

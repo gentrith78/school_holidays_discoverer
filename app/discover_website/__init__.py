@@ -12,14 +12,12 @@ load_dotenv()
 serp_api_key = os.getenv("BRIGHTDATA_SERP_KEY")
 gemini_api_key = os.getenv("GEMINI_KEY")
 
-llm_client = GeminiClient
-discoverer = WebsiteDiscovererLLM(llm_client=llm_client, serp_api_key=serp_api_key)
+llm_client = GeminiClient(gemini_api_key)
+website_discoverer = WebsiteDiscovererLLM(llm_client=llm_client, serp_api_key=serp_api_key)
 
 def discover_website(school: School) -> School:
-    res = discoverer.discover(school)
+    res = website_discoverer.discover(school)
 
-    if res["website"]:
-        # todo ask Josh for zone name and test further this module
-        school.website = res["website"]
+    school.website = res
 
     return school
