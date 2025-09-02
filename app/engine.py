@@ -1,17 +1,22 @@
-import logging
+import json
 from typing import List
+from datetime import datetime
+from dataclasses import asdict
 
-from app.utils import read_input_csv, configure_logging
 from app.data_struc import School
 from app.discover_website import discover_website
 from app.discover_holidays import discover_holidays
-
+from app.utils import read_input_csv, configure_logging
+from app.website_health import WebsiteHealthChecker
 
 def entrypoint():
     logger = configure_logging()
 
     logger.info("Starting")
     logger.info("Reading Input")
+
+    # website health checker
+    w_h = WebsiteHealthChecker()
 
     # read input schools
     input_schools: List[School] = read_input_csv()
@@ -29,7 +34,18 @@ def entrypoint():
             if school.website is None or school.website.isspace() or school.website=="":
                 logger.info("Website not present, trying to find website")
                 school = discover_website(school)
+                if school.website is None or school.website.isspace() or school.website == "":
+                    logger.info(f"Website NOT Found: {school.website}")
+                    school.status = f"Website NOT Found: {school.website}"
+                    continue
+
                 logger.info(f"Website Found: {school.website}")
+
+            # check website health
+            logger.info(f"Checking website health for: {school.website}")
+            if not w_h.is_usable(school.website):
+                school.status = "Website Health: Broken"
+                continue
 
             # discover holidays
             logger.info(f"Discovering Holidays for {school}")
@@ -38,10 +54,18 @@ def entrypoint():
 
         except Exception as e:
             logger.error(f"Error Processing: {school}")
+            logger.error(str(e))
+            school.status = str(e)
 
     # write to output
     logger.info("Writing to Output")
-    # todo write to output...
+    try:
+        data = [asdict(s) for s in input_schools]
+        timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        with open(f"{timestamp}.json", "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+    except:
+        pass
     logger.info("Process Completed")
 
 if __name__ == '__main__':

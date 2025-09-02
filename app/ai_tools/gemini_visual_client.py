@@ -23,8 +23,8 @@ class GeminiVisualClient:
       - JSON (extract_json)
     """
 
-    def __init__(self, gemini_model: str = "gemini-1.5-pro", timeout: int = 60):
-        self.api_key_gemini = self._read_api_key()
+    def __init__(self, gemini_model: str = "gemini-2.5-flash", timeout: int = 60):
+        self.api_key_gemini = self._read_api_key_gemini()
         self.gemini_model = gemini_model
         self.timeout = timeout
         self.endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{self.gemini_model}:generateContent"
@@ -45,9 +45,12 @@ class GeminiVisualClient:
                 tmp.flush()
                 tmp_path = tmp.name  # save path before context exits
 
-                raw_json = self._send(tmp.name, response_mime_type="application/json")
+                raw_json = self._send(tmp_path, response_mime_type="application/json")
 
                 return raw_json
+        except Exception as e:
+            print(str(e))
+            raise Exception(f"Error Getting data from visual gemini, Error Message: {str(e)}")
         finally:
             if tmp_path and os.path.exists(tmp_path):
                 os.remove(tmp_path)
@@ -71,8 +74,8 @@ class GeminiVisualClient:
                 ]
             }],
             "generationConfig": {
-                "temperature": 0.7,
-                "maxOutputTokens": 4096,
+                "temperature": 0.2,
+                "maxOutputTokens": 10000,
                 "response_mime_type": response_mime_type
             }
         }
@@ -105,5 +108,5 @@ class GeminiVisualClient:
 
         return prompt
 
-    def _read_api_key(self):
-        return os.getenv("GEMINI_KEY")
+    def _read_api_key_ppx(self):
+        return os.getenv("PERPLEXITY_KEY")

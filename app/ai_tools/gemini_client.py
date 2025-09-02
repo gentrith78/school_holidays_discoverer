@@ -8,13 +8,13 @@ class GeminiClient:
     Minimal wrapper for Google Gemini API.
     """
 
-    def __init__(self, api_key: str, model: str = "gemini-1.5-flash"):
-        self.api_key = api_key
+    def __init__(self, model: str = "gemini-1.5-flash"):
+        self.api_key = self.__read_api_key()
         self.model = model
         self.endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
         self.session = requests.Session()
 
-    def generate(self, prompt: str) -> str:
+    def generate_with_gemini(self, prompt: str) -> str:
         """
         Send a prompt to Gemini and return parsed JSON if possible.
         """
@@ -28,7 +28,7 @@ class GeminiClient:
             ],
             "generationConfig": {
                 "temperature": 0.2,
-                "maxOutputTokens": 512
+                "maxOutputTokens": 10000
             }
         }
 
@@ -40,6 +40,9 @@ class GeminiClient:
         except Exception as e:
             print(f"[GeminiClient] Error: {e}")
             return ""
+
+    def __read_api_key(self):
+        return os.getenv("GEMINI_KEY")
 
 
 

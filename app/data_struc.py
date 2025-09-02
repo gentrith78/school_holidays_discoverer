@@ -19,3 +19,4 @@ class School:
     lea_name: str
     website: Optional[str] = None
     holidays: List[Holiday] = None     # list of holiday entries for this school
+    status: str = ""

@@ -1,6 +1,7 @@
 # app/holiday_discovery/perplexity_discoverer.py
 from __future__ import annotations
 
+import logging
 import os
 import json
 import re
@@ -29,18 +30,19 @@ class HolidayDiscovererPerplexity(GeminiVisualClient):
         model: str = "sonar",
         timeout: int = 45,
     ):
-        self.api_key = api_key or os.environ.get("PPLX_API_KEY")
+        self.api_key = self._read_api_key_ppx()
         GeminiVisualClient.__init__(self)
 
         if not self.api_key:
-            raise ValueError("Perplexity API key missing. Set PPLX_API_KEY or pass api_key.")
+            raise ValueError("Perplexity API key missing. Set PERPLEXITY_KEY on .env")
         self.model = model
         self.timeout = timeout
         self.session = requests.Session()
-
+        self.log = logging.getLogger("main_logger")
     # ------------- public -------------
     def discover(self, school: School) -> List[Holiday]:
         """Fetch holidays for a School using Perplexity web search."""
+        self.log.info("Discovering holidays through perplexity")
         prompt = self._build_prompt(school)
         raw = self._call_perplexity(prompt)
         if not raw:
@@ -49,21 +51,32 @@ class HolidayDiscovererPerplexity(GeminiVisualClient):
         # Perplexity returns text; try to parse JSON block from it
         obj = self.parse_llm_json_obj(raw) if raw else None
 
-
         holidays_out: List[Holiday] = []
-        document_url: Optional[str] = None
+
+        if not obj.get('holidays', []) and obj.get('document_url', None) is None:
+            return holidays_out
 
         if obj and isinstance(obj, dict):
             document_url = (obj.get("document_url") or None) if isinstance(obj.get("document_url"), str) else None
             raw_holidays = obj.get("holidays") if isinstance(obj.get("holidays"), list) else []
 
             if not raw_holidays and not document_url.isspace() and not document_url == "" and document_url is not None:
-                raw_holidays = self.extract_json_with_visual_gemini(document_url)
+                self.log.info(f"Finding Holidays through document: {document_url}")
+                if str(document_url).split(".")[-1].strip() in ["jpeg", "jpg", "png", "pdf"]:
+                    raw_holidays = self.extract_json_with_visual_gemini(document_url)
+                else:
+                    self.log.info("Document url not a pdf or image")
+                    return holidays_out
 
             for item in raw_holidays:
                 if not isinstance(item, dict):
                     continue
                 try:
+                    if document_url is not None:
+                        source = document_url
+                    else:
+                        source = item.get("source_url", "")
+
                     holidays_out.append(Holiday(
                         academic_year=(item.get("academic_year") or "").strip(),
                         holiday_name=(item.get("holiday_name") or "").strip(),
@@ -71,7 +84,7 @@ class HolidayDiscovererPerplexity(GeminiVisualClient):
                         date_start=(item.get("date_start") or "").strip(),
                         date_end=(item.get("date_end") or "").strip(),
                         notes=(item.get("notes") or None),
-                        source_url=((item.get("source_url") or "").strip() or None),
+                        source_url=(source.strip() or None),
                     ))
                 except Exception:
                     continue
@@ -109,8 +122,8 @@ class HolidayDiscovererPerplexity(GeminiVisualClient):
                 {"role": "system", "content": "You are a precise extraction engine. Return only the requested JSON."},
                 {"role": "user", "content": prompt},
             ],
-            "temperature": 0.7,
-            "max_tokens": 1200,
+            "temperature": 0.1,
+            "max_tokens": 10000,
             # "return_citations": True,
         }
 
@@ -172,3 +185,6 @@ class HolidayDiscovererPerplexity(GeminiVisualClient):
             return obj if isinstance(obj, dict) else None
         except Exception:
             return None
+
+    def _read_api_key_gemini(self):
+        return os.getenv("GEMINI_KEY")

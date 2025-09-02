@@ -12,7 +12,7 @@ load_dotenv()
 serp_api_key = os.getenv("BRIGHTDATA_SERP_KEY")
 gemini_api_key = os.getenv("GEMINI_KEY")
 
-llm_client = GeminiClient(gemini_api_key)
+llm_client = GeminiClient()
 website_discoverer = WebsiteDiscovererLLM(llm_client=llm_client, serp_api_key=serp_api_key)
 
 def discover_website(school: School) -> School:

@@ -18,7 +18,7 @@ Rules:
   - "Other"
 - Keep date ranges exact as published. If a single day, date_start == date_end.
 - Include the source URL for each entry.
-- If year is implicit on the page, infer the academic year string (e.g., "2025-2026").
+- If year is implicit on the page, infer the academic year string (e.g., "2025-2026"). Otherwise, if academic year is other than this year (2025-2026) do not extract any holiday, since we are looking only for this academic year.
 
 Critical constraints (follow strictly):
 - If holiday data is ONLY available in a downloadable document (e.g., PDF, DOC/DOCX, XLS/XLSX/CSV, ICS/iCal, Google Drive/SharePoint file), DO NOT transcribe the dates. Set "document_url" to that file URL and set "holidays" to [].

@@ -1,0 +1,43 @@
+You are selecting the most promising SITEMAP URLs for finding school holiday / term / calendar information.
+
+LEA/District: <<school.lea_name>>
+State/Region: <<school.state_name>>
+Country: <<school.country>>
+Site root (expected official domain): <<site_root>>
+
+Candidate sitemaps (array of URLs; examine them):
+<<sitemaps_list>>
+
+Goal:
+Choose at most THREE (3) sitemap URLs from the above list that are most likely to contain links to:
+- holiday / term dates
+- academic calendar / events / key dates
+- files containing calendars (e.g., PDF, ICS/iCal, DOC, etc.)
+
+Heuristics (apply in this order):
+1) Prefer sitemaps on the same registrable domain as <<site_root>> (exact host or subdomain is OK).
+2) Prioritize names/paths containing: calendar, calendars, events, event, term-dates, termdates, term, dates, key-dates, keydates, holidays, academic, diary, schedule, ics, ical.
+3) If none on the main domain look relevant, allow trusted vendor hosts commonly used by districts (e.g., Finalsite/Blackboard/Apptegy/Edlio) **only if** path/title clearly relate to events/calendars or if they are linked from the same org.
+4) Prefer sitemaps that list URL entries pointing to pages or documents with those keywords and/or file extensions (.pdf, .ics, .ical, .doc, .docx).
+5) If no candidate plausibly contains calendar info, return an empty selection.
+
+Critical constraints:
+- Do NOT invent URLs. Only choose from candidate sitemaps.
+- If a sitemap is likely to lead to document links (e.g., calendar PDFs/ICS), that is acceptable — include it.
+- If you cannot fetch or cannot determine relevance, leave it out.
+- Determinism: base your answer only on the provided list and what you can fetch now; avoid randomness across runs.
+
+Output STRICTLY as compact JSON with NO markdown, NO extra text:
+
+{
+  "selected": [
+    {
+      "sitemap_url": "https://...",
+      "confidence": 0-100,
+    }
+  ]
+}
+
+Notes:
+- Return at most 3 objects in "selected".
+- If nothing fits, return: { "selected": [] }

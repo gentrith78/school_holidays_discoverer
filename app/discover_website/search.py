@@ -1,4 +1,3 @@
-# app/discovery/website_discoverer_llm.py
 from __future__ import annotations
 
 import os
@@ -10,7 +9,7 @@ from typing import Dict, List, Optional, reveal_type
 import urllib.parse
 
 from app.data_struc import School
-from app.discover_holidays.search import HolidayDiscovererPerplexity
+from app.discover_holidays.search_with_perplexity import HolidayDiscovererPerplexity
 
 class WebsiteDiscovererLLM:
     """
@@ -38,11 +37,11 @@ class WebsiteDiscovererLLM:
     def discover(self, school: School) -> str:
         """Return dict with chosen website, confidence, and candidates."""
 
-        query = f'"{school.lea_name}" {school.state_name} {school.country} official site'
+        query = f'"{school.lea_name}" {school.state_name} {school.country} official school site  -facebook -twitter -instagram -linkedin -pinterest -tiktok'
         candidates = self._serp_search(query)
 
         # fetch page snippets
-        enriched = []
+        enriched = [] # adding the html content to each candidate
         for c in candidates:
             snippet = self._fetch_snippet(c["link"])
             enriched.append({
@@ -52,13 +51,15 @@ class WebsiteDiscovererLLM:
                 "content": snippet,
             })
 
-        # ask LLM to choose
+        # ask LLM to choose which of the candidates is the website
         llm_choice = self._ask_llm(enriched, school)
 
-        self.log.info(f"Website Discovered: {str(llm_choice)}")
 
         if llm_choice.get("confidence", 0) >= 80:
+            self.log.info(f"Website Discovered: {str(llm_choice)}")
             return llm_choice.get("website", "")
+
+        self.log.info(f"Website NOT Discovered: {str(llm_choice)}")
 
         return ""
 
@@ -99,7 +100,6 @@ class WebsiteDiscovererLLM:
         return out
 
 
-
     def _fetch_snippet(self, url: str, max_chars: int = 1500) -> str:
         try:
             r = self.session.get(url, timeout=self.request_timeout, verify=False, headers={"User-Agent": "Mozilla/5.0"})
@@ -135,7 +135,7 @@ Which candidate is most likely the official website of this LEA?
 Respond in JSON with keys: {"website": URL, "confidence": number(0-100)}.
 """
 
-        response: str = self.llm_client.generate(prompt)
+        response: str = self.llm_client.generate_with_gemini(prompt)
         try:
             return HolidayDiscovererPerplexity.parse_llm_json_obj(response)
         except Exception:
