@@ -1,12 +1,8 @@
+import os
+
 from app.data_struc import School
 from app.discover_website.search import WebsiteDiscovererLLM
 from app.ai_tools.gemini_client import GeminiClient
-
-# todo remove dotenv from here once tests are doen
-import os
-from dotenv import load_dotenv
-load_dotenv()
-####
 
 
 serp_api_key = os.getenv("BRIGHTDATA_SERP_KEY")

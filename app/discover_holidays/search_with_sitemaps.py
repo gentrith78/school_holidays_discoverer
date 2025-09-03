@@ -99,11 +99,10 @@ class SearchWithSitemaps(GeminiClient):
         """Fetches sitemap URLs and writes extracted endpoints to a file."""
         try:
             w_client = RequestsWebClient(verify=False)
-            # todo remove or put client proxies
             w_client.set_proxies({
-            'server': f'http://rp.scrapegw.com:6060',
-            'username': "apvx45n24g1q810-country-us",
-            'password': "47tidtpecvad483"
+            'server': f'{os.getenv("PROXY_HOST")}:{os.getenv("PROXY_PORT")}',
+            'username': os.getenv("PROXY_USERNAME"),
+            'password': os.getenv("PROXY_PASSWORD")
         })  # uncomment for proxy
             w_client.set_timeout(7)
             tree = sitemap_tree_for_homepage(school.website, web_client=w_client)

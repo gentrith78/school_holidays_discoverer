@@ -185,5 +185,5 @@ class HolidayDiscovererPerplexity(GeminiVisualClient):
         except Exception:
             return None
 
-    def _read_api_key_gemini(self):
-        return os.getenv("GEMINI_KEY")
+    def _read_api_key_ppx(self):
+        return os.getenv("PERPLEXITY_KEY")

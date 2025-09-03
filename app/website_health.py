@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import time
 import re
+import os
 from dataclasses import dataclass
 from typing import Optional, Dict
 from urllib.parse import urlparse, urlunparse
@@ -49,6 +50,12 @@ class WebsiteHealthChecker:
         )
 
         self.s = requests.Session()
+
+        self.s.proxies = {
+        'http': f'http://{os.getenv("PROXY_USERNAME")}:{os.getenv("PROXY_PASSWORD")}@{os.getenv("PROXY_HOST")}:{os.getenv("PROXY_PORT")}',
+        'https': f'http://{os.getenv("PROXY_USERNAME")}:{os.getenv("PROXY_PASSWORD")}@{os.getenv("PROXY_HOST")}:{os.getenv("PROXY_PORT")}'
+        }
+
         self.s.headers.update({"User-Agent": user_agent})
         adapter = HTTPAdapter(max_retries=retry, pool_connections=20, pool_maxsize=20)
         self.s.mount("http://", adapter)

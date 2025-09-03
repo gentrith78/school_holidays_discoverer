@@ -30,7 +30,10 @@ class GeminiVisualClient:
         self.endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{self.gemini_model}:generateContent"
         self.prompt = self._get_prompt()
         self.session = requests.Session()
-
+        self.session.proxies = {
+        'http': f'http://{os.getenv("PROXY_USERNAME")}:{os.getenv("PROXY_PASSWORD")}@{os.getenv("PROXY_HOST")}:{os.getenv("PROXY_PORT")}',
+        'https': f'http://{os.getenv("PROXY_USERNAME")}:{os.getenv("PROXY_PASSWORD")}@{os.getenv("PROXY_HOST")}:{os.getenv("PROXY_PORT")}'
+        }
 
     def extract_json_with_visual_gemini(self, url: str) -> Any:
         """
@@ -108,5 +111,5 @@ class GeminiVisualClient:
 
         return prompt
 
-    def _read_api_key_ppx(self):
-        return os.getenv("PERPLEXITY_KEY")
+    def _read_api_key_gemini(self):
+        return os.getenv("GEMINI_KEY")
