@@ -2,11 +2,12 @@ import json
 from typing import List
 from datetime import datetime
 from dataclasses import asdict
+from pathlib import Path
 
 from app.data_struc import School
 from app.discover_website import discover_website
 from app.discover_holidays import discover_holidays
-from app.utils import read_input_csv, configure_logging
+from app.utils import read_input_csv_USA, configure_logging, ensure_output_dir, read_input_csv_UK
 from app.website_health import WebsiteHealthChecker
 
 def entrypoint():
@@ -19,7 +20,7 @@ def entrypoint():
     w_h = WebsiteHealthChecker()
 
     # read input schools
-    input_schools: List[School] = read_input_csv()
+    input_schools: List[School] = read_input_csv_UK()
     if not input_schools:
         logger.error("Could not find any input data")
         raise Exception("No Input data Found")
@@ -62,7 +63,8 @@ def entrypoint():
     try:
         data = [asdict(s) for s in input_schools]
         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        with open(f"{timestamp}.json", "w", encoding="utf-8") as f:
+        output_fp = ensure_output_dir().joinpath(timestamp)
+        with open(f"{output_fp.__str__()}.json", "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
     except:
         pass

@@ -1,14 +1,11 @@
 You are an extraction assistant. Use web search and browsing to find official holiday/term dates for the following LEA/district.
 
 LEA/District: <<school.lea_name>>
-State/Region: <<school.state_name>>
-Country: <<school.country>>
-Website (if given): <<school.website>>
-
-Search focus query (hint): <<q_hint>>
+Website: <<school.website>>
 
 Rules:
-- Prefer official district/LEA sources first.
+- Use only official district/LEA sources like website provided above.
+- Do not use different sources for different dates, the dates should come all from one source and that source should be the direct url to the dates.
 - Return all relevant *current and future* academic years you can find (e.g., 2025-2026, 2026-2027).
 - Normalize categories to one of:
   - "Term/Half-Term" (UK)
@@ -18,15 +15,16 @@ Rules:
   - "Other"
 - Keep date ranges exact as published. If a single day, date_start == date_end.
 - Include the source URL for each entry.
-- If year is implicit on the page, infer the academic year string (e.g., "2025-2026"). Otherwise, if academic year is other than this year (2025-2026) do not extract any holiday, since we are looking only for this academic year.
+- If year is implicit on the page, infer the academic year string (e.g., "2025-2026"). Otherwise, if academic year is other than this year (2025-2026) do not extract any holiday, since we are looking only for this academic year only.
+- Do not provide duplicate Holidays
 
 Critical constraints (follow strictly):
 - If holiday data is ONLY available in a downloadable document (e.g., PDF, DOC/DOCX, XLS/XLSX/CSV, ICS/iCal, Google Drive/SharePoint file), DO NOT transcribe the dates. Set "document_url" to that file URL and set "holidays" to [].
 - If you cannot reliably extract dates from accessible HTML or structured data, set "holidays" to [] and "document_url" to null.
-- If both an HTML page and a document exist, CHOOSE THE DOCUMENT and set "holidays" to [].
+- If both an HTML page and a document exist, CHOOSE THE PAGE content and set "holidays" to [].
 - Never output both a non-null "document_url" and a non-empty "holidays" at the same time.
 
-If multiple documents exist, choose the single most relevant one (covers current/future academic years or the longest/most comprehensive coverage).
+If multiple documents exist, choose the single most relevant one (covers current/future academic years).
 
 Output STRICTLY as a JSON object with two keys, no markdown, no comments, no text outside JSON:
 

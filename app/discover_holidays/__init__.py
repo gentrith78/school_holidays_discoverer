@@ -15,10 +15,10 @@ sitemaps_discoverer = SearchWithSitemaps()
 def discover_holidays(school: School) -> School:
     # todo discover holidays: first use perplexity and if that fails use scraping with gemini...
 
-    holidays = sitemaps_discoverer.discover(school)
-    if len(holidays) > 0:
-        school.holidays = holidays
-        return school
+    # holidays = sitemaps_discoverer.discover(school)
+    # if len(holidays) > 0:
+    #     school.holidays = holidays
+    #     return school
 
     holidays = perplexity_discoverer.discover(school)
     school.holidays = holidays

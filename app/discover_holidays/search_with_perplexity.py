@@ -48,7 +48,6 @@ class HolidayDiscovererPerplexity(GeminiVisualClient):
         if not raw:
             return []
 
-        # Perplexity returns text; try to parse JSON block from it
         obj = self.parse_llm_json_obj(raw) if raw else None
 
         holidays_out: List[Holiday] = []

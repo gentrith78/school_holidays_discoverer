@@ -7,7 +7,7 @@ from datetime import datetime
 
 from app.data_struc import School
 
-def read_input_csv() -> List[School]:
+def read_input_csv_USA() -> List[School]:
     schools: List[School] = []
 
     input_dir_path = Path(os.path.abspath(__file__)).parent.parent.joinpath("input")
@@ -27,6 +27,33 @@ def read_input_csv() -> List[School]:
                     schools.append(school)
 
     return schools
+
+def read_input_csv_UK() -> List[School]:
+    schools: List[School] = []
+
+    input_dir_path = Path(os.path.abspath(__file__)).parent.parent.joinpath("input")
+    for file in input_dir_path.iterdir():
+        if file.__str__().strip().endswith(".csv"):
+            with file.open(mode="r", encoding="utf-8-sig") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    school = School(
+                        country=row.get("Country", "").strip(),
+                        state_name=row.get("Region", "").strip(),
+                        region_city="",
+                        lea_name=row.get("LEA", "").strip(),
+                        website=row.get("Holiday URL", "").strip() or None,
+                        holidays=[]  # empty for now, to be filled later
+                    )
+                    schools.append(school)
+
+    return schools
+
+def ensure_output_dir():
+    input_dir_path = Path(os.path.abspath(__file__)).parent.parent.joinpath("output")
+    if not input_dir_path.exists():
+        os.makedirs(input_dir_path, exist_ok=True)
+    return input_dir_path
 
 def configure_logging():
     # Create a logger with the name 'my_project'
@@ -65,4 +92,4 @@ def configure_logging():
 
 
 if __name__ == '__main__':
-    read_input_csv()
+    read_input_csv_USA()

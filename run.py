@@ -1,5 +1,5 @@
 from app.engine import entrypoint
-from app.utils import configure_logging
+from app.utils import ensure_output_dir
 from dotenv import load_dotenv
 
 load_dotenv()
