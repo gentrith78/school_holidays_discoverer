@@ -2,7 +2,6 @@ import json
 from typing import List
 from datetime import datetime
 from dataclasses import asdict
-from pathlib import Path
 
 from app.data_struc import School
 from app.discover_website import discover_website
@@ -31,9 +30,18 @@ def entrypoint():
     for school in input_schools:
         try:
             logger.info(f"Processing {school}")
+
+            # check website health #1
+            logger.info(f"Checking website health for: {school.website}")
+            if not w_h.is_usable(school.website):
+                school.status = "Website Health: Broken"
+                school.website = ""
+            else:
+                school.status = "website_ok"
+
             # discover websites
             if school.website is None or school.website.isspace() or school.website=="":
-                logger.info("Website not present, trying to find website")
+                logger.info("Website not present or broken, trying to find website")
                 school = discover_website(school)
                 if school.website is None or school.website.isspace() or school.website == "":
                     logger.info(f"Website NOT Found: {school.website}")
@@ -42,11 +50,12 @@ def entrypoint():
 
                 logger.info(f"Website Found: {school.website}")
 
-            # check website health
-            logger.info(f"Checking website health for: {school.website}")
-            if not w_h.is_usable(school.website):
-                school.status = "Website Health: Broken"
-                continue
+            # check website health #2
+            if not "website_ok" in school.status:
+                logger.info(f"Checking website health for: {school.website}")
+                if not w_h.is_usable(school.website):
+                    school.status = "Website Health (check 2): Broken"
+                    continue
 
             # discover holidays
             logger.info(f"Discovering Holidays for {school}")

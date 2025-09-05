@@ -84,7 +84,7 @@ class SearchWithSitemaps(GeminiClient):
             'server': f'{os.getenv("PROXY_HOST")}:{os.getenv("PROXY_PORT")}',
             'username': os.getenv("PROXY_USERNAME"),
             'password': os.getenv("PROXY_PASSWORD")
-        })  # uncomment for proxy
+        })
             w_client.set_timeout(7)
             tree = sitemap_tree_for_homepage(school.website, web_client=w_client)
 

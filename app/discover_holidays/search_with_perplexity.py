@@ -7,13 +7,19 @@ import json
 import re
 import requests
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import List
 
+from app.scraping_tools import scrape
 from app.utils import parse_llm_json_obj
 from app.data_struc import School, Holiday
-from app.ai_tools import GeminiVisualClient, PerplexityClient, get_perplexity_get_holidays_prompt
+from app.ai_tools import (GeminiVisualClient,
+                          PerplexityClient,
+                          GeminiClient,
+                          get_perplexity_get_holidays_prompt,
+                          get_analyze_site_content_prompt)
 
-class HolidayDiscovererPerplexity(GeminiVisualClient, PerplexityClient):
+
+class HolidayDiscovererPerplexity(GeminiVisualClient, PerplexityClient, GeminiClient):
     """
     Minimal MVP: use Perplexity 'online' model to search the web and extract holidays
     for a given School (LEA/district). Returns a list[Holiday].
@@ -30,8 +36,9 @@ class HolidayDiscovererPerplexity(GeminiVisualClient, PerplexityClient):
         model: str = "sonar",
         timeout: int = 45,
     ):
-        GeminiVisualClient.__init__(self)
+        GeminiClient.__init__(self)
         PerplexityClient.__init__(self)
+        GeminiVisualClient.__init__(self)
 
         self.model = model
         self.timeout = timeout
@@ -61,11 +68,11 @@ class HolidayDiscovererPerplexity(GeminiVisualClient, PerplexityClient):
             if not raw_holidays and not document_url.isspace() and not document_url == "" and document_url is not None:
                 self.log.info(f"Finding Holidays through document: {document_url}")
                 if str(document_url).split(".")[-1].strip() in ["jpeg", "jpg", "png", "pdf"]:
-                    raw_holidays = self.extract_json_with_visual_gemini(document_url)
+                    raw_holidays = self.generate_json_with_visual_gemini(document_url)
                 else:
                     self.log.info("Document url not a pdf or image")
-                    # todo document link can sometimes be a webpage so we need to scrape it and analyze its content
-                    return holidays_out
+                    raw_holidays = self.extract_with_page_analyze(school, document_url)
+
 
             for item in raw_holidays:
                 if not isinstance(item, dict):
@@ -90,3 +97,19 @@ class HolidayDiscovererPerplexity(GeminiVisualClient, PerplexityClient):
 
 
         return holidays_out
+
+    def extract_with_page_analyze(self, school: School, url: str):
+        """
+        perplexity returned a document url that is not an image or pdf so we are trying to scrape it and extract data
+        """
+        self.log.info(f"Extracting Holidays by analyzing page content: {url}")
+        page_content = scrape(url)
+
+        if page_content is None:
+            self.log.info(f"Couldn't scrape {url}")
+            return ""
+
+        prompt = get_analyze_site_content_prompt(school, url, page_content)
+        gemini_response = self.generate_with_gemini(prompt)
+
+        return parse_llm_json_obj(gemini_response)

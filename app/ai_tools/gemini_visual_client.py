@@ -1,14 +1,13 @@
-# gemini_doc_client.py
-import base64
-import json
 import os
+import json
+import base64
+import logging
 import requests
 import tempfile
 from typing import Any
-from pathlib import Path
 
-from app.utils import parse_llm_json_obj
 from app.ai_tools.fetch_prompts import get_gemini_visual_prompt
+
 
 def _guess_mime(path: str) -> str:
     p = path.lower()
@@ -30,6 +29,7 @@ class GeminiVisualClient:
         self.api_key_gemini = self._read_api_key_gemini()
         self.gemini_model = gemini_model
         self.timeout = timeout
+        self.log = logging.getLogger("main_logger")
         self.prompt = get_gemini_visual_prompt()
 
         self.endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{self.gemini_model}:generateContent"
@@ -39,7 +39,7 @@ class GeminiVisualClient:
         'https': f'http://{os.getenv("PROXY_USERNAME")}:{os.getenv("PROXY_PASSWORD")}@{os.getenv("PROXY_HOST")}:{os.getenv("PROXY_PORT")}'
         }
 
-    def extract_json_with_visual_gemini(self, url: str) -> Any:
+    def generate_json_with_visual_gemini(self, url: str) -> Any:
         """
         Returns parsed JSON (dict/list) extracted by the model from the file.
         If model returns invalid JSON, this will raise json.JSONDecodeError.
@@ -47,14 +47,16 @@ class GeminiVisualClient:
         try:
             with tempfile.NamedTemporaryFile(suffix=os.path.splitext(url)[-1]) as tmp:
                 r = self.session.get(url, timeout=self.timeout)
-                r.raise_for_status()
+
                 tmp.write(r.content)
                 tmp.flush()
                 tmp_path = tmp.name  # save path before context exits
 
-                holidays_found = self._send(tmp_path, response_mime_type="application/json")
+                r.raise_for_status()
 
-                return holidays_found
+                raw_response = self._send(tmp_path, response_mime_type="application/json")
+
+                return json.loads(raw_response)
         except Exception as e:
             print(str(e))
             raise Exception(f"Error Getting data from visual gemini, Error Message: {str(e)}")
@@ -63,7 +65,7 @@ class GeminiVisualClient:
                 os.remove(tmp_path)
 
     # --------- Internals ---------
-    def _send(self, file_path: str, *, response_mime_type: str) -> dict:
+    def _send(self, file_path: str, *, response_mime_type: str) -> str:
         """
         returns serialized json response from gemini
         """
@@ -81,7 +83,7 @@ class GeminiVisualClient:
                 ]
             }],
             "generationConfig": {
-                "temperature": 0.2,
+                "temperature": 0.1,
                 "maxOutputTokens": 10000,
                 "response_mime_type": response_mime_type
             }
@@ -93,7 +95,7 @@ class GeminiVisualClient:
         r = requests.post(self.endpoint, headers=headers, params=params, json=body, timeout=self.timeout)
         r.raise_for_status()
 
-        return json.loads(r.json()["candidates"][0]["content"]["parts"][0]["text"])
+        return self._unwrap_text(r.json())
 
     @staticmethod
     def _unwrap_text(api_response: dict) -> str:
