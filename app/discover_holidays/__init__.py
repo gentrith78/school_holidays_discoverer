@@ -6,7 +6,7 @@ from app.discover_holidays.search_with_sitemaps import SearchWithSitemaps
 
 
 ppx_api_key = os.getenv("PERPLEXITY_KEY")
-perplexity_discoverer = HolidayDiscovererPerplexity(api_key=ppx_api_key)
+perplexity_discoverer = HolidayDiscovererPerplexity()
 sitemaps_discoverer = SearchWithSitemaps()
 
 def discover_holidays(school: School) -> School:

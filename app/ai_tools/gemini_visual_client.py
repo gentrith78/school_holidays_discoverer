@@ -4,9 +4,11 @@ import json
 import os
 import requests
 import tempfile
-from typing import Any, Optional
+from typing import Any
 from pathlib import Path
 
+from app.utils import parse_llm_json_obj
+from app.ai_tools.fetch_prompts import get_gemini_visual_prompt
 
 def _guess_mime(path: str) -> str:
     p = path.lower()
@@ -18,7 +20,8 @@ def _guess_mime(path: str) -> str:
 
 class GeminiVisualClient:
     """
-    Minimal client to send a PDF/image to Gemini 1.5 and get back:
+    Analyzes images and pdf files and outputs results based on the prompt...
+    Minimal client to send a PDF/image to Gemini and get back:
       - raw text (extract_text)
       - JSON (extract_json)
     """
@@ -27,8 +30,9 @@ class GeminiVisualClient:
         self.api_key_gemini = self._read_api_key_gemini()
         self.gemini_model = gemini_model
         self.timeout = timeout
+        self.prompt = get_gemini_visual_prompt()
+
         self.endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{self.gemini_model}:generateContent"
-        self.prompt = self._get_prompt()
         self.session = requests.Session()
         self.session.proxies = {
         'http': f'http://{os.getenv("PROXY_USERNAME")}:{os.getenv("PROXY_PASSWORD")}@{os.getenv("PROXY_HOST")}:{os.getenv("PROXY_PORT")}',
@@ -48,9 +52,9 @@ class GeminiVisualClient:
                 tmp.flush()
                 tmp_path = tmp.name  # save path before context exits
 
-                raw_json = self._send(tmp_path, response_mime_type="application/json")
+                holidays_found = self._send(tmp_path, response_mime_type="application/json")
 
-                return raw_json
+                return holidays_found
         except Exception as e:
             print(str(e))
             raise Exception(f"Error Getting data from visual gemini, Error Message: {str(e)}")
@@ -86,7 +90,7 @@ class GeminiVisualClient:
         headers = {"Content-Type": "application/json"}
         params = {"key": self.api_key_gemini}
 
-        r = self.session.post(self.endpoint, headers=headers, params=params, json=body, timeout=self.timeout)
+        r = requests.post(self.endpoint, headers=headers, params=params, json=body, timeout=self.timeout)
         r.raise_for_status()
 
         return json.loads(r.json()["candidates"][0]["content"]["parts"][0]["text"])
@@ -101,15 +105,6 @@ class GeminiVisualClient:
         except Exception:
             # Fallback to empty string if shape changes
             return ""
-
-    def _get_prompt(self) -> str:
-        prompt_path = (Path(os.path.abspath(__file__)).parent.parent.joinpath("PROMPTS")
-                       .joinpath("gemini_extract_dates_from_visual.txt"))
-
-        with open(prompt_path.__str__(), "r") as f:
-            prompt = f.read()
-
-        return prompt
 
     def _read_api_key_gemini(self):
         return os.getenv("GEMINI_KEY")

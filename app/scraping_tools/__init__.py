@@ -1,0 +1,1 @@
+from app.scraping_tools.crawl4ai_scraper import scrape

@@ -20,7 +20,7 @@ def entrypoint():
     w_h = WebsiteHealthChecker()
 
     # read input schools
-    input_schools: List[School] = read_input_csv_UK()
+    input_schools: List[School] = read_input_csv_USA()
     if not input_schools:
         logger.error("Could not find any input data")
         raise Exception("No Input data Found")

@@ -9,10 +9,11 @@ import requests
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 
+from app.utils import parse_llm_json_obj
 from app.data_struc import School, Holiday
-from app.ai_tools.gemini_visual_client import GeminiVisualClient
+from app.ai_tools import GeminiVisualClient, PerplexityClient, get_perplexity_get_holidays_prompt
 
-class HolidayDiscovererPerplexity(GeminiVisualClient):
+class HolidayDiscovererPerplexity(GeminiVisualClient, PerplexityClient):
     """
     Minimal MVP: use Perplexity 'online' model to search the web and extract holidays
     for a given School (LEA/district). Returns a list[Holiday].
@@ -26,15 +27,12 @@ class HolidayDiscovererPerplexity(GeminiVisualClient):
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
         model: str = "sonar",
         timeout: int = 45,
     ):
-        self.api_key = self._read_api_key_ppx()
         GeminiVisualClient.__init__(self)
+        PerplexityClient.__init__(self)
 
-        if not self.api_key:
-            raise ValueError("Perplexity API key missing. Set PERPLEXITY_KEY on .env")
         self.model = model
         self.timeout = timeout
         self.session = requests.Session()
@@ -43,12 +41,13 @@ class HolidayDiscovererPerplexity(GeminiVisualClient):
     def discover(self, school: School) -> List[Holiday]:
         """Fetch holidays for a School using Perplexity web search."""
         self.log.info("Discovering holidays through perplexity")
-        prompt = self._build_prompt(school)
-        raw = self._call_perplexity(prompt)
+        prompt = get_perplexity_get_holidays_prompt(school)
+        raw = self.generate_with_perplexity(prompt)
+
         if not raw:
             return []
 
-        obj = self.parse_llm_json_obj(raw) if raw else None
+        obj = parse_llm_json_obj(raw) if raw else None
 
         holidays_out: List[Holiday] = []
 
@@ -65,6 +64,7 @@ class HolidayDiscovererPerplexity(GeminiVisualClient):
                     raw_holidays = self.extract_json_with_visual_gemini(document_url)
                 else:
                     self.log.info("Document url not a pdf or image")
+                    # todo document link can sometimes be a webpage so we need to scrape it and analyze its content
                     return holidays_out
 
             for item in raw_holidays:
@@ -90,100 +90,3 @@ class HolidayDiscovererPerplexity(GeminiVisualClient):
 
 
         return holidays_out
-
-    # ------------- internals -------------
-    def _build_prompt(self, school: School) -> str:
-        prompt_path = (Path(os.path.abspath(__file__)).parent.parent.joinpath("PROMPTS")
-                       .joinpath("perplexity_discover_holidays.txt"))
-
-        with open(prompt_path.__str__(), "r") as f:
-            prompt = f.read()
-
-        q_hint = f'{school.lea_name} {school.state_name} {school.country} school holiday dates calendar term dates academic year site:({school.website})' if school.website else f'{school.lea_name} {school.state_name} {school.country} school holiday dates calendar term dates'
-
-        prompt = (prompt.replace("<<school.lea_name>>", school.lea_name)
-                  .replace("<<school.state_name>>", school.state_name)
-                  .replace("<<school.country>>", school.country)
-                  .replace("<<school.website>>", school.website)
-                  .replace("<<q_hint>>", q_hint)
-                  )
-
-        return prompt.strip()
-
-    def _call_perplexity(self, prompt: str) -> Optional[str]:
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-        }
-        body: Dict = {
-            "model": self.model,
-            "messages": [
-                {"role": "system", "content": "You are a precise extraction engine. Return only the requested JSON."},
-                {"role": "user", "content": prompt},
-            ],
-            "temperature": 0.1,
-            "max_tokens": 10000,
-            # "return_citations": True,
-        }
-
-        try:
-            resp = self.session.post(self.API_URL, headers=headers, json=body, timeout=self.timeout)
-            resp.raise_for_status()
-            data = resp.json()
-            # Perplexity-style response (OpenAI-compatible)
-            return data["choices"][0]["message"]["content"]
-        except Exception as e:
-            print(f"[Perplexity] error: {e}")
-            return None
-
-    @staticmethod
-    def parse_llm_json_obj(text: str) -> Optional[Dict[str, Any]]:
-        """
-        Robustly parse a JSON OBJECT returned by an LLM.
-        Expected shape: {"holidays": [...], "document_url": "https://..."}
-        Accepts code fences, outer quotes, trailing commas, and truncation after last '}'.
-
-        Returns dict or None.
-        """
-        if not text:
-            return None
-
-        t = text.strip()
-
-        # Strip code fences
-        if t.startswith("```"):
-            t = re.sub(r"^```(?:json)?\s*|\s*```$", "", t, flags=re.IGNORECASE).strip()
-
-        # Strip single outer quotes (common when printed or embedded)
-        if (t.startswith("'") and t.endswith("'")) or (t.startswith('"') and t.endswith('"')):
-            t = t[1:-1].strip()
-
-        # First attempt
-        try:
-            obj = json.loads(t)
-            if isinstance(obj, dict):
-                return obj
-        except Exception:
-            pass
-
-        # Try to find the first '{' block and salvage until last '}'
-        m = re.search(r"\{\s*.+", t, flags=re.DOTALL)
-        if not m:
-            return None
-
-        obj_txt = m.group(0)
-        last_brace = obj_txt.rfind("}")
-        if last_brace != -1:
-            obj_txt = obj_txt[: last_brace + 1]
-
-        # Remove trailing commas like ", }" or ", ]"
-        obj_txt = re.sub(r",\s*([}\]])", r"\1", obj_txt)
-
-        try:
-            obj = json.loads(obj_txt)
-            return obj if isinstance(obj, dict) else None
-        except Exception:
-            return None
-
-    def _read_api_key_ppx(self):
-        return os.getenv("PERPLEXITY_KEY")

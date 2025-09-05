@@ -5,11 +5,11 @@ import json
 import logging
 import requests
 from urllib.parse import urlparse
-from typing import Dict, List, Optional, reveal_type
+from typing import Dict, List
 import urllib.parse
 
 from app.data_struc import School
-from app.discover_holidays.search_with_perplexity import HolidayDiscovererPerplexity
+from app.utils import parse_llm_json_obj
 
 class WebsiteDiscovererLLM:
     """
@@ -32,13 +32,18 @@ class WebsiteDiscovererLLM:
         self.max_candidates = max_candidates
         self.request_timeout = request_timeout
         self.session = requests.Session()
+        self.session.proxies = {
+        'http': f'http://{os.getenv("PROXY_USERNAME")}:{os.getenv("PROXY_PASSWORD")}@{os.getenv("PROXY_HOST")}:{os.getenv("PROXY_PORT")}',
+        'https': f'http://{os.getenv("PROXY_USERNAME")}:{os.getenv("PROXY_PASSWORD")}@{os.getenv("PROXY_HOST")}:{os.getenv("PROXY_PORT")}'
+        }
+
         self.log = logging.getLogger("main_logger")
 
     def discover(self, school: School) -> str:
         """Return dict with chosen website, confidence, and candidates."""
 
         query = f'"{school.lea_name}" {school.state_name} {school.country} official school site  -facebook -twitter -instagram -linkedin -pinterest -tiktok'
-        candidates = self._serp_search(query)
+        candidates = self._serp_search(query)[:self.max_candidates]
 
         # fetch page snippets
         enriched = [] # adding the html content to each candidate
@@ -137,6 +142,6 @@ Respond in JSON with keys: {"website": URL, "confidence": number(0-100)}.
 
         response: str = self.llm_client.generate_with_gemini(prompt)
         try:
-            return HolidayDiscovererPerplexity.parse_llm_json_obj(response)
+            return parse_llm_json_obj(response)
         except Exception:
             return {"website": None, "confidence": 0}
