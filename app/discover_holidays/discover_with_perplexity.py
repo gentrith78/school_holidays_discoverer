@@ -1,12 +1,7 @@
-# app/holiday_discovery/perplexity_discoverer.py
 from __future__ import annotations
 
 import logging
-import os
-import json
-import re
 import requests
-from pathlib import Path
 from typing import List
 
 from app.scraping_tools import scrape
@@ -98,18 +93,35 @@ class HolidayDiscovererPerplexity(GeminiVisualClient, PerplexityClient, GeminiCl
 
         return holidays_out
 
-    def extract_with_page_analyze(self, school: School, url: str):
+    def extract_with_page_analyze(self, school: School, url: str) -> List[dict]:
         """
         perplexity returned a document url that is not an image or pdf so we are trying to scrape it and extract data
+        - sometimes this page returns a pdf document url so we have to download and extract only holidays from it
+        :returns only a list of holidays as dict or empty list, never a document url
         """
         self.log.info(f"Extracting Holidays by analyzing page content: {url}")
         page_content = scrape(url)
 
         if page_content is None:
             self.log.info(f"Couldn't scrape {url}")
-            return ""
+            return []
 
         prompt = get_analyze_site_content_prompt(school, url, page_content)
         gemini_response = self.generate_with_gemini(prompt)
 
-        return parse_llm_json_obj(gemini_response)
+        parsed_respo = parse_llm_json_obj(gemini_response)
+
+
+        if not parsed_respo.get('holidays', []) and parsed_respo.get('document_url', None) is None:
+            return []
+
+        raw_holidays = parsed_respo.get("holidays") if isinstance(parsed_respo.get("holidays"), list) else []
+        document_url = (parsed_respo.get("document_url") or None)\
+            if isinstance(parsed_respo.get("document_url"), str) else None
+
+        if not raw_holidays and not document_url.isspace() and not document_url == "" and document_url is not None:
+            self.log.info(f"Finding Holidays through document (in page analysis func): {document_url}")
+            if str(document_url).split(".")[-1].strip() in ["jpeg", "jpg", "png", "pdf"]:
+                raw_holidays = self.generate_json_with_visual_gemini(document_url)
+
+        return raw_holidays

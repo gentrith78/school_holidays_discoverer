@@ -69,6 +69,9 @@ class WebsiteHealthChecker:
         - OR explicitly marked as "blocked" (e.g. Cloudflare 403/503)
         Return False if unreachable (timeout, DNS failure, connection refused, etc.)
         """
+        if url is None or url.isspace() or url=="":
+            return False
+
         health = self.check(url)
 
         # Accept if site gave us a good status

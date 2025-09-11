@@ -15,13 +15,22 @@ Rules:
   - "Other"
 - Keep date ranges exact as published. If a single day, date_start == date_end.
 - Include the source URL for each entry.
-- If year is implicit on the page, infer the academic year string (e.g., "2025-2026"). Otherwise, if academic year is other than this year (2025-2026) do not extract any holiday, since we are looking only for this academic year only.
+- If year is implicit on the page, infer the academic year string (e.g., "2025-2026"). Otherwise, if academic year is other than this year (2025-2026) do not extract any dates, since we are looking only for this academic year only.
 - Do not provide duplicate Holidays
+- If you cannot reliably extract dates from this page, or if REQUIRED coverage (below) is not fully met for the current academic year, set "holidays": [] and "document_url": null (unless a document link exists as above).
+
+Required coverage (for the current academic year, e.g., 2025–2026):
+- Start of school (synonyms: “First Day of School”, “First day for students”, not staff-only).
+- End of school (synonyms: “Last Day of School”, not graduation/ceremony-only).
+- Fall Break (synonyms: “Autumn Break”, exclude single-day holidays like Labor Day).
+- Winter Break (may be called “Christmas Break”).
+- Spring Break.
+If any required item is missing or ambiguous in PAGE CONTENT, treat REQUIRED coverage as not met.
 
 Critical constraints (follow strictly):
-- If holiday data is ONLY available in a downloadable document (e.g., PDF, DOC/DOCX, XLS/XLSX/CSV, ICS/iCal, Google Drive/SharePoint file), DO NOT transcribe the dates. Set "document_url" to that file URL and set "holidays" to [].
+- If data is ONLY available in a downloadable document (e.g., PDF, DOC/DOCX, XLS/XLSX/CSV, ICS/iCal, Google Drive/SharePoint file), DO NOT transcribe the dates. Set "document_url" to that file URL and set "holidays" to [].
 - If you cannot reliably extract dates from accessible HTML or structured data, set "holidays" to [] and "document_url" to null.
-- If both an HTML page and a document exist, CHOOSE THE PAGE content and set "holidays" to [].
+- If both an HTML page and a document exist, CHOOSE THE PAGE content and set "document_url" to null.
 - Never output both a non-null "document_url" and a non-empty "holidays" at the same time.
 
 If multiple documents exist, choose the single most relevant one (covers current/future academic years).

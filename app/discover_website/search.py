@@ -10,6 +10,7 @@ import urllib.parse
 
 from app.data_struc import School
 from app.utils import parse_llm_json_obj
+from app.scraping_tools import serp_search
 
 class WebsiteDiscovererLLM:
     """
@@ -43,7 +44,7 @@ class WebsiteDiscovererLLM:
         """Return dict with chosen website, confidence, and candidates."""
 
         query = f'"{school.lea_name}" {school.state_name} {school.country} official school site  -facebook -twitter -instagram -linkedin -pinterest -tiktok'
-        candidates = self._serp_search(query)[:self.max_candidates]
+        candidates = serp_search(query)[:self.max_candidates]
 
         # fetch page snippets
         enriched = [] # adding the html content to each candidate
@@ -70,39 +71,6 @@ class WebsiteDiscovererLLM:
 
 
     # --- internals ---
-
-    def _serp_search(self, query: str) -> List[Dict]:
-        out: List[dict] = []
-        headers = {"Authorization": f"Bearer {self.serp_api_key}",
-                   "Content-Type": "application/json"
-                   }
-
-        query = urllib.parse.quote_plus(query)
-
-        payload = {
-            "zone": "serp_api_lir",
-            "url": f"https://www.google.com/search?q={query}&brd_json=1",
-            "format": "json"
-        }
-
-        try:
-            resp = self.session.post(self.BRIGHTDATA_ENDPOINT, headers=headers, json=payload, timeout=self.request_timeout)
-            resp.raise_for_status()
-            serialised_resp = json.loads(resp.json()['body'])
-        except Exception as e:
-            print(f"SERP error: {e}")
-            return []
-
-        for el in serialised_resp.get("organic", ""):
-            out.append(
-                {
-                    "link": el.get("link", ""),
-                    "title": el.get("title", ""),
-                    "description": el.get("description"),
-                }
-            )
-
-        return out
 
 
     def _fetch_snippet(self, url: str, max_chars: int = 1500) -> str:

@@ -26,6 +26,15 @@ Rules:
   - Set "holidays": [] (empty).
 - If you cannot reliably extract any dates from this page, set "holidays": [] and "document_url": null.
 - Never output both a non-null "document_url" and a non-empty "holidays" at the same time.
+- If you cannot reliably extract dates from this page, or if REQUIRED coverage (below) is not fully met for the current academic year, set "holidays": [] and "document_url": null (unless a document link exists as above).
+
+Required coverage (for the current academic year, e.g., 2025–2026):
+- Start of school (synonyms: “First Day of School”, “First day for students”, not staff-only).
+- End of school (synonyms: “Last Day of School”, not graduation/ceremony-only).
+- Fall Break (synonyms: “Autumn Break”, exclude single-day holidays like Labor Day).
+- Winter Break (may be called “Christmas Break”).
+- Spring Break.
+If any required item is missing or ambiguous in PAGE CONTENT, treat REQUIRED coverage as not met.
 
 De-duplication:
 - If the page repeats the same holiday with identical dates, keep only one entry.

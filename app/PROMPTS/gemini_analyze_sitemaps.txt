@@ -1,4 +1,4 @@
-You are selecting the most promising SITEMAP URLs for finding school holiday / term / calendar information.
+1You are selecting the most promising SITEMAP URLs for finding school holiday / term / calendar information.
 
 LEA/District: <<school.lea_name>>
 State/Region: <<school.state_name>>

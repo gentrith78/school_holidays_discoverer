@@ -55,7 +55,6 @@ class SearchWithSitemaps(GeminiClient):
             analyze_content_prompt = get_analyze_site_content_prompt(school, url, site_content)
             gemini_output = self.generate_with_gemini(analyze_content_prompt)
             raw_holidays: dict = parse_llm_json_obj(gemini_output)
-            # todo add feature to get document link and analyze with gemini
             for item in raw_holidays.get("holidays"):
                 if not isinstance(item, dict):
                     continue

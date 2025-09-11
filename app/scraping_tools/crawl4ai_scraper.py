@@ -13,7 +13,8 @@ async def _crawl4ai_scrape(url: str) -> str:
     )
     browser_config = BrowserConfig(
         enable_stealth=True,  # Simple flag to enable
-        proxy_config=proxies
+        proxy_config=proxies,
+        headless=True
     )
     run_cfg = CrawlerRunConfig(
         excluded_tags=["nav", "footer"],

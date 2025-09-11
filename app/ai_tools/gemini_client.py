@@ -1,7 +1,6 @@
 import os
-import json
 import requests
-from typing import Dict
+
 
 class GeminiClient:
     """
@@ -12,7 +11,6 @@ class GeminiClient:
         self.api_key = self.__read_api_key()
         self.model = model
         self.endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
-        self.session = requests.Session()
 
     def generate_with_gemini(self, prompt: str) -> str:
         """
@@ -33,7 +31,7 @@ class GeminiClient:
         }
 
         try:
-            resp = self.session.post(self.endpoint, headers=headers, params=params, json=body, timeout=30)
+            resp = requests.post(self.endpoint, headers=headers, params=params, json=body, timeout=30)
             resp.raise_for_status()
             data = resp.json()
             return data["candidates"][0]["content"]["parts"][0]["text"]
