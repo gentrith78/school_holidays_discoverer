@@ -101,9 +101,10 @@ class WebsiteHealthChecker:
 
         # 1) normalize url (default https)
         norm = self._normalize_url(url)
-
+        self.log.info(f"In Website Check: Normalised URK: {norm}")
         # 2) try HTTPS with cert verification
         r, reason = self._probe(norm, verify=True)
+
         if r is None and "SSLError" in reason:
             # 3) retry HTTPS without verification (capture tls_ok=False)
             r, reason = self._probe(norm, verify=False)
@@ -115,7 +116,8 @@ class WebsiteHealthChecker:
             tried_http_downgrade = True
             r, reason = self._probe(http_url, verify=False)
             tls_ok = False
-
+        self.log.info(f"In Website Check: Response: {r.text}")
+        self.log.info(f"In Website Check: Reason: {reason}")
         elapsed_ms = int((time.time() - start) * 1000)
 
         if r is not None:
