@@ -28,7 +28,7 @@ def entrypoint():
 
     # process each school
     for school in input_schools:
-        try:
+        # try:
             logger.info(f"Processing {school}")
 
             # check website health #1
@@ -62,10 +62,10 @@ def entrypoint():
             school = discover_holidays(school)
             logger.info(f"Total Holidays Found: {len(school.holidays)}")
 
-        except Exception as e:
-            logger.error(f"Error Processing: {school}")
-            logger.error(str(e))
-            school.status = str(e)
+        # except Exception as e:
+        #     logger.error(f"Error Processing: {school}")
+        #     logger.error(str(e))
+        #     school.status = str(e)
 
     # write to output
     logger.info("Writing to Output")
