@@ -128,6 +128,7 @@ class WebsiteHealthChecker:
             ctype = r.headers.get("Content-Type")
 
             if r.request.method == "GET" and ctype and "html" in ctype.lower():
+                self.log.info(f"trying to fetch text content from response: response is this---->>>{r}")
                 txt = r.text[:5000]
                 has_html_title = bool(re.search(r"<title[^>]*>.*?</title>", txt, flags=re.IGNORECASE | re.DOTALL))
 
