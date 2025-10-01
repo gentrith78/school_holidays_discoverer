@@ -51,10 +51,10 @@ class WebsiteHealthChecker:
 
         self.s = requests.Session()
 
-        # self.s.proxies = {
-        # 'http': f'http://{os.getenv("PROXY_USERNAME")}:{os.getenv("PROXY_PASSWORD")}@{os.getenv("PROXY_HOST")}:{os.getenv("PROXY_PORT")}',
-        # 'https': f'http://{os.getenv("PROXY_USERNAME")}:{os.getenv("PROXY_PASSWORD")}@{os.getenv("PROXY_HOST")}:{os.getenv("PROXY_PORT")}'
-        # }
+        self.s.proxies = {
+        'http': f'http://{os.getenv("PROXY_USERNAME")}:{os.getenv("PROXY_PASSWORD")}@{os.getenv("PROXY_HOST")}:{os.getenv("PROXY_PORT")}',
+        'https': f'http://{os.getenv("PROXY_USERNAME")}:{os.getenv("PROXY_PASSWORD")}@{os.getenv("PROXY_HOST")}:{os.getenv("PROXY_PORT")}'
+        }
 
         self.s.headers.update({"User-Agent": user_agent})
         adapter = HTTPAdapter(max_retries=retry, pool_connections=20, pool_maxsize=20)
@@ -104,8 +104,8 @@ class WebsiteHealthChecker:
         self.log.info(f"In Website Check: Normalised URK: {norm}")
         # 2) try HTTPS with cert verification
         r, reason = self._probe(norm, verify=True)
-        self.log.info(f"In Website Check1: Response: {r.text}")
-        self.log.info(f"In Website Check1: Reason: {reason}")
+        # self.log.info(f"In Website Check1: Response: {r.text}")
+        # self.log.info(f"In Website Check1: Reason: {reason}")
         if r is None and "SSLError" in reason:
             # 3) retry HTTPS without verification (capture tls_ok=False)
             r, reason = self._probe(norm, verify=False)
