@@ -56,11 +56,12 @@ def get_analyze_sitemaps_prompt(school: School, sitemaps: List[str]) -> str:
 
     return prompt
 
-def get_gemini_visual_prompt() -> str:
+def get_gemini_visual_prompt(school: School) -> str:
     prompt_path = (Path(os.path.abspath(__file__)).parent.parent.joinpath("PROMPTS")
                    .joinpath("gemini_extract_dates_from_visual.txt"))
 
     with open(prompt_path.__str__(), "r") as f:
         prompt = f.read()
+        prompt = prompt.replace("<<lea>>", school.lea_name)
 
     return prompt

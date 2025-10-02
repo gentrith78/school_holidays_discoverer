@@ -39,7 +39,7 @@ class GeminiVisualClient:
         self.max_doc_pages: int = 20
         self.log = logging.getLogger("main_logger")
         self.gemini_text_model = GeminiClient()
-        self.prompt = get_gemini_visual_prompt()
+        # self.prompt = get_gemini_visual_prompt()
 
         self.endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{self.gemini_model}:generateContent"
         self.session = requests.Session()
@@ -48,7 +48,7 @@ class GeminiVisualClient:
         'https': f'http://{os.getenv("PROXY_USERNAME")}:{os.getenv("PROXY_PASSWORD")}@{os.getenv("PROXY_HOST")}:{os.getenv("PROXY_PORT")}'
         }
 
-    def generate_json_with_visual_gemini(self, url: str) -> Any:
+    def generate_json_with_visual_gemini(self, url: str, school: School) -> Any:
         """
         Returns parsed JSON (dict/list) extracted by the model from the file.
         If model returns invalid JSON, this will raise json.JSONDecodeError.
@@ -70,7 +70,7 @@ class GeminiVisualClient:
                 if tmp_path.endswith(".docx"):
                     return self._extract_from_doxc(tmp_path)
                 else:
-                    raw_response = self._send(tmp_path, response_mime_type="application/json")
+                    raw_response = self._send(tmp_path, school,response_mime_type="application/json")
 
                 return json.loads(raw_response)
         except Exception as e:
@@ -79,7 +79,7 @@ class GeminiVisualClient:
             return []
 
     # --------- Internals ---------
-    def _send(self, file_path: str, *, response_mime_type: str) -> str:
+    def _send(self, file_path: str, school: School, response_mime_type: str) -> str:
         """
         returns serialized json response from gemini
         """
@@ -87,7 +87,7 @@ class GeminiVisualClient:
             b64 = base64.b64encode(f.read()).decode("utf-8")
 
         mime = _guess_mime(file_path)
-        user_prompt = self.prompt.strip()
+        user_prompt = get_gemini_visual_prompt(school)
 
         body = {
             "contents": [{

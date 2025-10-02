@@ -63,7 +63,7 @@ class HolidayDiscovererPerplexity(GeminiVisualClient, PerplexityClient, GeminiCl
             if not raw_holidays and not document_url.isspace() and not document_url == "" and document_url is not None:
                 self.log.info(f"Finding Holidays through document: {document_url}")
                 if str(document_url).split(".")[-1].strip() in ["jpeg", "jpg", "png", "pdf"]:
-                    raw_holidays = self.generate_json_with_visual_gemini(document_url)
+                    raw_holidays = self.generate_json_with_visual_gemini(document_url, school)
                 else:
                     self.log.info("Document url not a pdf or image")
                     raw_holidays = self.extract_with_page_analyze(school, document_url)
@@ -122,6 +122,6 @@ class HolidayDiscovererPerplexity(GeminiVisualClient, PerplexityClient, GeminiCl
         if not raw_holidays and not document_url.isspace() and not document_url == "" and document_url is not None:
             self.log.info(f"Finding Holidays through document (in page analysis func): {document_url}")
             if str(document_url).split(".")[-1].strip() in ["jpeg", "jpg", "png", "pdf"]:
-                raw_holidays = self.generate_json_with_visual_gemini(document_url)
+                raw_holidays = self.generate_json_with_visual_gemini(document_url, school)
 
         return raw_holidays

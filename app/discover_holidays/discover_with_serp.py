@@ -65,7 +65,7 @@ class DiscoverWithSERP(GeminiClient, GeminiVisualClient):
         if not raw_holidays and not document_url.isspace() and not document_url == "" and document_url is not None:
             self.log.info(f"Finding Holidays through document (in page analysis func): {document_url}")
             if str(document_url).split(".")[-1].strip() in ["jpeg", "jpg", "png", "pdf", "docx"]:
-                raw_holidays = self.generate_json_with_visual_gemini(document_url)
+                raw_holidays = self.generate_json_with_visual_gemini(document_url, school)
 
         if document_url is not None:
             source = document_url

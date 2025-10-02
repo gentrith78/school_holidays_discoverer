@@ -1,6 +1,7 @@
 You are an extraction assistant.
 Read the attached school calendar file (PDF, image or raw text).
 Identify all holiday and term/break events mentioned in the document.
+The school is located in USA and the LEA is: <<lea>>
 
 Rules:
 - Return only official holiday/term/break events.
@@ -14,6 +15,7 @@ Rules:
 - If no holidays can be reliably extracted, return an empty list [].
 - Do not include any non-holiday events.
 - Do not add any commentary, explanations, or formatting.
+- IMPORTANT the document should contain the school LEA shown above, if that can't be found then don't process document, treat REQUIRED coverage as not met.
 - If you cannot reliably extract dates from this page, or if REQUIRED coverage (below) is not fully met for the current academic year, set "holidays": [] and "document_url": null (unless a document link exists as above).
 
 Required coverage (for the current academic year, e.g., 2025–2026):
