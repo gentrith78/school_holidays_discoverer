@@ -7,7 +7,7 @@ class GeminiClient:
     Minimal wrapper for Google Gemini API.
     """
 
-    def __init__(self, model: str = "gemini-1.5-flash"):
+    def __init__(self, model: str = "gemini-2.5-pro"):
         self.api_key = self.__read_api_key()
         self.model = model
         self.endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"

@@ -4,7 +4,7 @@ from typing import Dict, Optional
 import requests
 
 class PerplexityClient:
-    def __init__(self, model: str = "sonar"):
+    def __init__(self, model: str = "sonar-pro"):
         self.model = model
         self.timeout: int = 45
 

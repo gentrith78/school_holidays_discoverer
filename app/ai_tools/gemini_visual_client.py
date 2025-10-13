@@ -32,7 +32,7 @@ class GeminiVisualClient:
       - JSON (extract_json)
     """
 
-    def __init__(self, gemini_model: str = "gemini-2.5-flash", timeout: int = 60):
+    def __init__(self, gemini_model: str = "gemini-2.5-pro", timeout: int = 60):
         self.api_key_gemini = self._read_api_key_gemini()
         self.gemini_model = gemini_model
         self.timeout = timeout
