@@ -6,7 +6,9 @@ import tempfile
 from typing import Any
 
 import requests
+from google import genai
 from pypdf import PdfReader
+from google.genai import types
 
 from app.data_struc import School
 from app.utils import parse_llm_json_obj
@@ -14,6 +16,7 @@ from app.ai_tools.utils.doc_extractor import docx_to_markdown
 from app.ai_tools.fetch_prompts import get_gemini_visual_prompt
 from app.ai_tools.gemini_client import GeminiClient
 from app.ai_tools.fetch_prompts import get_analyze_site_content_prompt
+
 
 
 def _guess_mime(path: str) -> str:
@@ -38,6 +41,7 @@ class GeminiVisualClient:
         self.timeout = timeout
         self.max_doc_pages: int = 20
         self.log = logging.getLogger("main_logger")
+        self.client = genai.Client(api_key=os.environ.get("GEMINI_KEY"))
         self.gemini_text_model = GeminiClient()
         # self.prompt = get_gemini_visual_prompt()
 
@@ -71,8 +75,8 @@ class GeminiVisualClient:
                     return self._extract_from_doxc(tmp_path)
                 else:
                     raw_response = self._send(tmp_path, school,response_mime_type="application/json")
-
-                return json.loads(raw_response)
+                    parse_llm_json_obj(raw_response)
+                return parse_llm_json_obj(raw_response)
         except Exception as e:
             print(str(e))
             self.log.error(f"Error Getting data from visual gemini, Error Message: {str(e)}")
@@ -81,46 +85,33 @@ class GeminiVisualClient:
     # --------- Internals ---------
     def _send(self, file_path: str, school: School, response_mime_type: str) -> str:
         """
-        returns serialized json response from gemini
+        returns response from gemini
         """
-        with open(file_path, "rb") as f:
-            b64 = base64.b64encode(f.read()).decode("utf-8")
-
-        mime = _guess_mime(file_path)
         user_prompt = get_gemini_visual_prompt(school)
 
-        body = {
-            "contents": [{
-                "parts": [
-                    {"text": user_prompt},
-                    {"inline_data": {"mime_type": mime, "data": b64}},
-                ]
-            }],
-            "generationConfig": {
-                "temperature": 0.1,
-                "maxOutputTokens": 10000,
-                "response_mime_type": response_mime_type
-            }
-        }
+        with open(file_path, "rb") as f:
+            file_bytes = f.read()
+        # Upload the file once (2 GB/file; kept ~48h)
 
-        headers = {"Content-Type": "application/json"}
-        params = {"key": self.api_key_gemini}
-
-        r = requests.post(self.endpoint, headers=headers, params=params, json=body, timeout=self.timeout)
-        r.raise_for_status()
-
-        return self._unwrap_text(r.json())
-
-    @staticmethod
-    def _unwrap_text(api_response: dict) -> str:
-        """
-        Safely unwrap Gemini response text.
-        """
-        try:
-            return api_response["candidates"][0]["content"]["parts"][0]["text"]
-        except Exception:
-            # Fallback to empty string if shape changes
-            return ""
+        resp = self.client.models.generate_content(
+            model=self.gemini_model,
+            contents=[
+                types.Content(
+                    role="user",
+                    parts=[
+                        types.Part(text=user_prompt),
+                        types.Part.from_bytes(data=file_bytes, mime_type="application/pdf"),
+                    ],
+                )
+            ],
+            # Use the typed config (replaces generation_config)
+            config=types.GenerateContentConfig(
+                temperature=0,
+                max_output_tokens=20000,
+                response_mime_type="application/json"
+            ),
+        )
+        return resp.parts[0].text
 
     def _extract_from_doxc(self, file_path: str):
         md_coverted_text = docx_to_markdown(file_path)
@@ -165,3 +156,29 @@ if __name__ == '__main__':
 
     a.generate_json_with_visual_gemini(uu)
 
+    #######################################
+    # import os
+    # from dotenv import load_dotenv
+    # load_dotenv()
+    # fn = "/Users/gentrithoxhaj/Desktop/SchoolWebsiteHolidaysScraper/ASD20 2025-26 Annual Calendar (1).pdf"
+    #
+    # from google import genai
+    #
+    # client = genai.Client(api_key=os.environ.get("GEMINI_KEY"))
+    #
+    # # Upload the file once (2 GB/file; kept ~48h)
+    # pdf = client.files.upload(file=fn)
+    #
+    # # Use the uploaded file directly in contents
+    # resp = client.models.generate_content(
+    #     model="gemini-2.5-flash",
+    #     contents=[
+    #         "Extract all holidays and term dates from this school and output them as json",
+    #         pdf,  # <- the uploaded file
+    #     ],
+    #     # Optional generation settings:
+    #     config={"temperature": 0.1, "max_output_tokens": 10000}
+    # )
+    # print(resp.text)
+    # # todo add this type of gemini integration to all ai tools with gemini
+    #

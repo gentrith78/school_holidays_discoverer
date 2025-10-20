@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 
 from crawl4ai import BrowserConfig, CrawlerRunConfig, AsyncWebCrawler, ProxyConfig
 
+from app.scraping_tools.brightdata_browser_scraper import scrape_html_from_wss
 
 async def _crawl4ai_scrape(url: str) -> str:
     proxies = ProxyConfig(
@@ -27,7 +28,9 @@ async def _crawl4ai_scrape(url: str) -> str:
         return result.markdown
 
 def scrape(url: str) -> str:
-    return asyncio.run(_crawl4ai_scrape(url))
+
+    # return asyncio.run(_crawl4ai_scrape(url))
+    return scrape_html_from_wss(url, os.environ.get("BROWSER_WSS"))
 
 if __name__ == '__main__':
     load_dotenv()

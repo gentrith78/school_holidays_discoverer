@@ -1,2 +1,3 @@
 from app.scraping_tools.crawl4ai_scraper import scrape
 from app.scraping_tools.bright_data_serp import serp_search
+from app.scraping_tools.brightdata_browser_scraper import scrape_html_from_wss

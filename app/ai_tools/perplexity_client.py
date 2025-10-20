@@ -4,8 +4,8 @@ from typing import Dict, Optional
 import requests
 
 class PerplexityClient:
-    def __init__(self, model: str = "sonar-pro"):
-        self.model = model
+    def __init__(self, ppx_model: str = "sonar-pro"):
+        self.ppx_model = ppx_model
         self.timeout: int = 45
 
         self.ppx_endpoint = "https://api.perplexity.ai/chat/completions"
@@ -17,7 +17,7 @@ class PerplexityClient:
             "Content-Type": "application/json",
         }
         body: Dict = {
-            "model": self.model,
+            "model": self.ppx_model,
             "messages": [
                 {"role": "system", "content": "You are a precise extraction engine. Return only the requested JSON."},
                 {"role": "user", "content": prompt},

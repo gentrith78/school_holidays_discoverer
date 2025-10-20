@@ -21,6 +21,9 @@ class DiscoverWithSERP(GeminiClient, GeminiVisualClient):
 
         for s in serp_result:
             url = s.get("link", None)
+            if len(holidays_out) >= 30:
+                # there are more than 30 holidays found which means most likely they're found
+                continue
             if url:
                 try:
                     holidays: List[Holiday] = self._get_holidays(school, url)

@@ -1,6 +1,8 @@
 import os
 import requests
 
+from google import genai
+from google.genai import types
 
 class GeminiClient:
     """
@@ -11,30 +13,28 @@ class GeminiClient:
         self.api_key = self.__read_api_key()
         self.model = model
         self.endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
+        self.client = genai.Client(api_key=os.environ.get("GEMINI_KEY"))
 
     def generate_with_gemini(self, prompt: str) -> str:
-        """
-        Send a prompt to Gemini and return parsed JSON if possible.
-        """
-        headers = {"Content-Type": "application/json"}
-        params = {"key": self.api_key}
-        body = {
-            "contents": [
-                {
-                    "parts": [{"text": prompt}]
-                }
-            ],
-            "generationConfig": {
-                "temperature": 0.2,
-                "maxOutputTokens": 10000
-            }
-        }
-
+        # Combine prompt + text in the same message
         try:
-            resp = requests.post(self.endpoint, headers=headers, params=params, json=body, timeout=30)
-            resp.raise_for_status()
-            data = resp.json()
-            return data["candidates"][0]["content"]["parts"][0]["text"]
+            resp = self.client.models.generate_content(
+                model=self.model,
+                contents=[
+                    types.Content(
+                        role="user",
+                        parts=[
+                            types.Part(text=prompt)
+                        ],
+                    )
+                ],
+                config=types.GenerateContentConfig(
+                    temperature=0,
+                    max_output_tokens=15000,
+                    response_mime_type="application/json",
+                ),
+            )
+            return resp.parts[0].text
         except Exception as e:
             print(f"[GeminiClient] Error: {e}")
             return ""
