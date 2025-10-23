@@ -17,9 +17,8 @@ def discover_holidays(school: School) -> School:
     #     school.holidays = holidays
     #     return school
 
-    holidays = []
-    # holidays = serp_discoverer.discover(school)
-    # school.holidays = holidays
+    holidays = serp_discoverer.discover(school)
+    school.holidays = holidays
 
     if not holidays:
         holidays = perplexity_discoverer.discover(school)
