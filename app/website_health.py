@@ -80,7 +80,7 @@ class WebsiteHealthChecker:
             return True
 
         # Accept if site is "blocked" but reachable
-        if health.reason.startswith("blocked") or "http_status_401" in health.reason:
+        if health.reason.startswith("blocked"):
             self.log.info("Website Health: Blocked -- Can continue...")
             return True
 
