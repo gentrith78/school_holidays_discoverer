@@ -26,10 +26,8 @@ Rules:
 	    •	Start of school; End of school; Fall Break; Winter Break; Spring Break; All “No Students” days; Public/Federal Holidays (Labor Day, MLK Day, Presidents’ Day, Memorial Day, Independence Day).
 	•   If the same event name appears multiple times with non-continuous dates, treat them as separate events, even if the names are identical. Example: “New Licensed Staff Orientation – July 31–Aug 1” and “New Licensed Staff Orientation – Aug 4” should each appear as distinct entries.
 	•	Critical constraints:
-	    •	If data is ONLY available in a downloadable document (PDF/DOC/XLS/CSV/ICS, Google Drive/SharePoint), DO NOT transcribe dates. Set “document_url” to that file URL and “holidays”: [].
-	    •	If both an HTML page and a document exist, CHOOSE THE PAGE content and set “document_url”: null.
-	    •	If you cannot reliably extract dates from accessible HTML/structured data, set “holidays”: [] and “document_url”: null.
-	    •	Never output both a non-null “document_url” and a non-empty “holidays” at the same time.
+	    •	If data is ONLY available in a downloadable document (PDF/DOC/XLS/CSV/ICS, Google Drive/SharePoint), analyze the file and extract dates from it.
+	    •	If you cannot reliably extract dates from accessible HTML/structured data, set “holidays”: []
 	    •	De-duplication: if the same holiday with identical dates repeats, keep only one entry.
 
 Output STRICTLY as a JSON object with two keys, no markdown, no comments, no text outside JSON:
@@ -46,5 +44,4 @@ Output STRICTLY as a JSON object with two keys, no markdown, no comments, no tex
             “source_url”: “https://…”
         }
     ],
-    “document_url”: “https://…”   // null if not applicable
 }

@@ -17,10 +17,26 @@ class DiscoverWithSERP(GeminiClient, GeminiVisualClient):
         holidays_out: List[Holiday] = []
 
         query = self._build_query(school)
-        serp_result: List[dict] = serp_search(query, max_results=3)
-
+        serp_result: List[dict] = serp_search(query, max_results=10)
+        best_serp_matches = []
         for s in serp_result:
-            url = s.get("link", None)
+            if str(s).count(school.lea_name.lower().strip()) < 0:
+                continue
+            best_serp_matches.append(
+                {
+                "serp_data":s,
+                "counted_lea":str(s).count(school.lea_name.lower().strip())
+
+            }
+            )
+
+        sorted_list = sorted(best_serp_matches, key=lambda x: x["counted_lea"], reverse=True)
+
+        if not sorted_list:
+            return []
+
+        for s in sorted_list[:3]:
+            url = s.get("serp_data", {}).get("link")
             if len(holidays_out) >= 30:
                 # there are more than 30 holidays found which means most likely they're found
                 continue

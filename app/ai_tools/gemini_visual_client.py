@@ -75,8 +75,12 @@ class GeminiVisualClient:
                     return self._extract_from_doxc(tmp_path)
                 else:
                     raw_response = self._send(tmp_path, school,response_mime_type="application/json")
-                    parse_llm_json_obj(raw_response)
-                return parse_llm_json_obj(raw_response)
+                    parsed = parse_llm_json_obj(raw_response)
+                    if parsed is None:
+                        parsed = json.loads(raw_response)
+                if parsed is None:
+                    raise
+                return parsed
         except Exception as e:
             print(str(e))
             self.log.error(f"Error Getting data from visual gemini, Error Message: {str(e)}")
