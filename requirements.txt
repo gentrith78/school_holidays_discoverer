@@ -19,6 +19,7 @@ click-log==0.4.0
 Crawl4AI==0.7.4
 cryptography==45.0.7
 distro==1.9.0
+et_xmlfile==2.0.0
 fake-http-header==0.3.5
 fake-useragent==2.2.0
 fastuuid==0.12.0
@@ -57,7 +58,9 @@ networkx==3.5
 nltk==3.9.1
 numpy==2.3.2
 openai==1.104.1
+openpyxl==3.1.5
 packaging==25.0
+pandas==2.3.3
 patchright==1.52.5
 pillow==11.3.0
 playwright==1.55.0
@@ -76,6 +79,7 @@ pypdf==6.0.0
 python-dateutil==2.9.0.post0
 python-docx==1.2.0
 python-dotenv==1.1.1
+pytz==2025.2
 PyYAML==6.0.2
 rank-bm25==0.2.2
 referencing==0.36.2
@@ -99,6 +103,7 @@ tqdm==4.67.1
 trimesh==4.8.0
 typing-inspection==0.4.1
 typing_extensions==4.15.0
+tzdata==2025.2
 ultimate-sitemap-parser==1.5.0
 urllib3==2.5.0
 websockets==15.0.1

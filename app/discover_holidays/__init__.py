@@ -16,10 +16,10 @@ def discover_holidays(school: School) -> School:
     # if len(holidays) > 0:
     #     school.holidays = holidays
     #     return school
-    holidays = serp_discoverer.discover(school)
-    school.holidays = holidays
-    school.status = "Found With SERP Search"
-
+    # holidays = serp_discoverer.discover(school)
+    # school.holidays = holidays
+    # school.status = "Found With SERP Search"
+    holidays = []
     if not holidays:
         holidays = openai_discoverer.discover(school)
         school.holidays = holidays

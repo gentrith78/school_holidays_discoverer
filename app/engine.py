@@ -8,8 +8,9 @@ from dataclasses import asdict
 from app.data_struc import School
 from app.discover_website import discover_website
 from app.discover_holidays import discover_holidays
-from app.utils import read_input_csv_USA, configure_logging, ensure_output_dir, read_input_csv_UK
 from app.website_health import WebsiteHealthChecker
+from app.convert_to_excel import export_school_holidays_to_excel
+from app.utils import read_input_csv_USA, configure_logging, ensure_output_dir, read_input_csv_UK
 
 def entrypoint():
     logger = configure_logging()
@@ -72,11 +73,13 @@ def entrypoint():
     # write to output
     logger.info("Writing to Output")
     try:
-        data = [asdict(s) for s in input_schools]
         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        output_fp = ensure_output_dir().joinpath(timestamp)
-        with open(f"{output_fp.__str__()}.json", "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+        output_fp = ensure_output_dir().joinpath(f"{timestamp}.csv")
+        logger.info(f"Writting output to: {output_fp}")
+        export_school_holidays_to_excel(input_schools, output_fp)
+        # data = [asdict(s) for s in input_schools]
+        # with open(f"{output_fp.__str__()}.json", "w", encoding="utf-8") as f:
+        #     json.dump(data, f, indent=2, ensure_ascii=False)
     except:
         pass
     logger.info("Process Completed")
