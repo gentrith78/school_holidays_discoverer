@@ -3,33 +3,58 @@ from app.discover_holidays.discover_with_serp import DiscoverWithSERP
 from app.discover_holidays.discover_with_openai import DiscoverWithOpenai
 from app.discover_holidays.discover_with_sitemaps import SearchWithSitemaps
 from app.discover_holidays.discover_with_perplexity import HolidayDiscovererPerplexity
-
+from app.discover_holidays.discover_with_educounty import DiscoverWithEduCounty
 
 perplexity_discoverer = HolidayDiscovererPerplexity()
 sitemaps_discoverer = SearchWithSitemaps()
 openai_discoverer = DiscoverWithOpenai()
 serp_discoverer = DiscoverWithSERP()
+educounty_discoverer = DiscoverWithEduCounty()
 
 def discover_holidays(school: School) -> School:
-
-    # holidays = sitemaps_discoverer.discover(school)
-    # if len(holidays) > 0:
-    #     school.holidays = holidays
-    #     return school
-    # holidays = serp_discoverer.discover(school)
-    # school.holidays = holidays
-    # school.status = "Found With SERP Search"
+    """
+    Discover holidays using multiple strategies, prioritizing EduCounty.net
+    """
     holidays = []
-    if not holidays:
-        holidays = openai_discoverer.discover(school)
+    
+    # Strategy 1: Try EduCounty.net first (new primary method)
+    holidays = educounty_discoverer.discover(school)
+    if holidays and len(holidays) > 0:
+        school.holidays = holidays
+        school.status = "Found With EduCounty"
+        return school
+    
+    # Strategy 2: Fallback to SERP search
+    holidays = serp_discoverer.discover(school)
+    if holidays and len(holidays) > 0:
+        school.holidays = holidays
+        school.status = "Found With SERP Search"
+        return school
+    
+    # Strategy 3: Fallback to OpenAI web search
+    holidays = openai_discoverer.discover(school)
+    if holidays and len(holidays) > 0:
         school.holidays = holidays
         school.status = "Found With Openai"
-
-    # if not holidays:
-    #     holidays = perplexity_discoverer.discover(school)
+        return school
+    
+    # Strategy 4: Try sitemaps (currently commented out)
+    # holidays = sitemaps_discoverer.discover(school)
+    # if holidays and len(holidays) > 0:
     #     school.holidays = holidays
+    #     school.status = "Found With Sitemaps"
+    #     return school
+    
+    # Strategy 5: Try Perplexity (currently commented out)
+    # holidays = perplexity_discoverer.discover(school)
+    # if holidays and len(holidays) > 0:
+    #     school.holidays = holidays
+    #     school.status = "Found With Perplexity"
+    #     return school
 
+    # No holidays found
     if not holidays:
+        school.holidays = []
         school.status = "Couldn't find Holiday Data"
 
     return school

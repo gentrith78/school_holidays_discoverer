@@ -1,0 +1,14 @@
+You are matching a school district/LEA to a search result from a school calendar site.
+
+School we are looking for:
+- LEA name: "<<school.lea_name>>"
+- State: "<<school.state_name>>"
+- City/region: "<<school.region_city>>"
+
+Search result:
+- Title: "<<result_title>>"
+- State shown in result: "<<state_in_article>>"
+
+Is this search result the same school/district? Names may be abbreviated, reordered, or slightly different (e.g. "Red Clay School District" vs "Red Clay", or "Washington Local SD" vs "Washington Local School District").
+Answer with a JSON object containing a single key "match" with value true or false.
+Example: {"match": true} or {"match": false}

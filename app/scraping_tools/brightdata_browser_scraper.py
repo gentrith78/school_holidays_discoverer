@@ -4,7 +4,7 @@ from markdownify import markdownify as md
 def html_to_md_markdownify(html: str) -> str:
     return md(html, heading_style="ATX")  # simple and reliable
 
-def scrape_html_from_wss(url: str, wss_endpoint: str) -> str:
+def scrape_html_from_wss(url: str, wss_endpoint: str, return_md=True) -> str:
     """
     Connects to a remote browser via WSS endpoint, opens the URL,
     waits for content to load, scrolls to trigger lazy loads, and
@@ -48,8 +48,10 @@ def scrape_html_from_wss(url: str, wss_endpoint: str) -> str:
 
         context.close()
         browser.close()
+        if return_md:
+            return html_to_md_markdownify(html_content)
 
-        return html_to_md_markdownify(html_content)
+        return html_content
 
 
 if __name__ == '__main__':

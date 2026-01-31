@@ -25,12 +25,16 @@ async def _crawl4ai_scrape(url: str) -> str:
 
     async with AsyncWebCrawler(config=browser_config) as crawler:
         result = await crawler.arun(url, config=run_cfg)
-        return result.markdown
+        return result.html
 
 def scrape(url: str) -> str:
 
     # return asyncio.run(_crawl4ai_scrape(url))
     return scrape_html_from_wss(url, os.environ.get("BROWSER_WSS"))
+
+
+def scrape_with_crwal4ai(url: str):
+    return asyncio.run(_crawl4ai_scrape(url))
 
 if __name__ == '__main__':
     load_dotenv()

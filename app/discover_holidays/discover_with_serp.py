@@ -131,4 +131,5 @@ class DiscoverWithSERP(GeminiClient, GeminiVisualClient):
 
     @staticmethod
     def _build_query(school: School) -> str:
-        return f"school holidays or term dates for {school.lea_name} school district 2025-2026 -facebook -twitter -instagram -linkedin -pinterest -tiktok"
+        # return f"school holidays or term dates for {school.lea_name} school district 2025-2026 -facebook -twitter -instagram -linkedin -pinterest -tiktok"
+        return f"site:{school.website.replace("http://www.","").replace("http://", "")} ('term date' OR 'academic calendar' OR 'school calendar')"

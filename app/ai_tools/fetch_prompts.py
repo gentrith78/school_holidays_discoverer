@@ -65,3 +65,26 @@ def get_gemini_visual_prompt(school: School) -> str:
         prompt = prompt.replace("<<lea>>", school.lea_name)
 
     return prompt
+
+
+def get_match_school_result_prompt(
+    school: School,
+    result_title: str,
+    state_in_article: str,
+) -> str:
+    """Prompt for Gemini Flash: is this search result the same school? Returns prompt with placeholders filled."""
+    prompt_path = (Path(os.path.abspath(__file__)).parent.parent.joinpath("PROMPTS")
+                   .joinpath("gemini_match_school_result.txt"))
+
+    with open(prompt_path.__str__(), "r") as f:
+        prompt = f.read()
+
+    prompt = (
+        prompt.replace("<<school.lea_name>>", school.lea_name or "")
+        .replace("<<school.state_name>>", school.state_name or "")
+        .replace("<<school.region_city>>", school.region_city or "")
+        .replace("<<result_title>>", result_title or "")
+        .replace("<<state_in_article>>", state_in_article or "")
+    )
+
+    return prompt.strip()

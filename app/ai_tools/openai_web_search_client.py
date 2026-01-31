@@ -1,7 +1,10 @@
 import os
+import logging
 
 import requests
 from openai import OpenAI
+from tenacity import retry
+
 client = OpenAI()
 
 
@@ -10,7 +13,7 @@ class OpenAiWebSearchClient:
         self.openai_model = openai_model
         self.timeout: int = 45
         self.openai_endpoint = "https://api.openai.com/v1/responses"
-
+        self._logger = logging.getLogger("main_logger")
         self.session = requests.Session()
         self.openai_api_key = self._read_api_key_openai()
 
@@ -19,13 +22,14 @@ class OpenAiWebSearchClient:
             result = client.responses.create(
                 model="gpt-5.1",
                 input=prompt,
-                reasoning={"effort": "medium"}, # todo change to medium if needed
+                reasoning={"effort": "medium"},
                 text={"verbosity": "low"},
                 tools=[{"type": "web_search"}],  # <-- REQUIRED for web search
             )
-            return result
+            return result.output[-1].content[0].text
         except:
-            pass
+            self._logger.error("Error Fetching data from openai web search")
+            return None
         # payload = {
         #     "model": self.openai_model,
         #     "tools": [{"type": "web_search"}],

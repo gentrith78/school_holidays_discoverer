@@ -11,6 +11,7 @@ from app.discover_holidays import discover_holidays
 from app.website_health import WebsiteHealthChecker
 from app.convert_to_excel import export_school_holidays_to_excel
 from app.utils import read_input_csv_USA, configure_logging, ensure_output_dir, read_input_csv_UK
+from app.holiday_validator import validate_required_holidays
 
 def entrypoint():
     logger = configure_logging()
@@ -64,6 +65,11 @@ def entrypoint():
             logger.info(f"Discovering Holidays for {school}")
             school = discover_holidays(school)
             logger.info(f"Total Holidays Found: {len(school.holidays)}")
+            
+            # validate required holidays
+            if school.holidays and len(school.holidays) > 0:
+                logger.info(f"Validating required holidays for {school}")
+                school = validate_required_holidays(school)
 
         except Exception as e:
             logger.error(f"Error Processing: {school}")
