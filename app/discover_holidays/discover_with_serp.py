@@ -4,7 +4,12 @@ from typing import List
 from app.utils import parse_llm_json_obj
 from app.data_struc import School, Holiday
 from app.scraping_tools import serp_search, scrape
-from app.ai_tools import GeminiClient, GeminiVisualClient, get_analyze_site_content_prompt
+from app.ai_tools import (
+    GeminiClient,
+    GeminiVisualClient,
+    get_analyze_site_content_prompt,
+    get_filter_serp_results_prompt,
+)
 
 class DiscoverWithSERP(GeminiClient, GeminiVisualClient):
     def __init__(self):
@@ -35,7 +40,8 @@ class DiscoverWithSERP(GeminiClient, GeminiVisualClient):
         if not sorted_list:
             return []
 
-        for s in sorted_list[:3]:
+        filtered_list = self._filter_serp_results_with_llm(school, sorted_list)
+        for s in filtered_list[:3]:
             url = s.get("serp_data", {}).get("link")
             if len(holidays_out) >= 30:
                 # there are more than 30 holidays found which means most likely they're found
@@ -52,6 +58,41 @@ class DiscoverWithSERP(GeminiClient, GeminiVisualClient):
 
         # remove duplicates...
         return self.deduplicate_by_dates(holidays_out)
+
+    def _filter_serp_results_with_llm(
+        self, school: School, sorted_list: List[dict]
+    ) -> List[dict]:
+        """
+        Use LLM to compare SERP results with the school and return only potential positive
+        results (same list-of-dict structure). On parse failure or empty selected_links,
+        fall back to sorted_list[:3].
+        """
+        if not sorted_list:
+            return []
+        try:
+            prompt = get_filter_serp_results_prompt(school, sorted_list)
+            response = self.generate_with_gemini(prompt, model="gemini-2.5-flash")
+            parsed = parse_llm_json_obj(response)
+            selected_links = (
+                parsed.get("selected_links") if isinstance(parsed, dict) else None
+            )
+            if not selected_links or not isinstance(selected_links, list):
+                self.log.info("LLM filter returned no selected_links, using fallback")
+                return sorted_list[:3]
+            selected_set = set(selected_links)
+            filtered = []
+            seen_links = set()
+            for item in sorted_list:
+                link = (item.get("serp_data") or {}).get("link")
+                if link and link in selected_set and link not in seen_links:
+                    seen_links.add(link)
+                    filtered.append(item)
+            if not filtered:
+                return sorted_list[:3]
+            return filtered
+        except Exception as e:
+            self.log.warning(f"LLM filter failed: {e}, using fallback")
+            return sorted_list[:3]
 
     def _get_holidays(self, school: School, url):
         # scrape
@@ -131,5 +172,5 @@ class DiscoverWithSERP(GeminiClient, GeminiVisualClient):
 
     @staticmethod
     def _build_query(school: School) -> str:
-        # return f"school holidays or term dates for {school.lea_name} school district 2025-2026 -facebook -twitter -instagram -linkedin -pinterest -tiktok"
-        return f"site:{school.website.replace("http://www.","").replace("http://", "")} ('term date' OR 'academic calendar' OR 'school calendar')"
+        return f"school holidays or term dates for {school.lea_name} school district 2025-2026 -facebook -twitter -instagram -linkedin -pinterest -tiktok"
+        # return f"site:{school.website.replace("http://www.","").replace("http://", "")} ('term date' OR 'academic calendar' OR 'school calendar')"

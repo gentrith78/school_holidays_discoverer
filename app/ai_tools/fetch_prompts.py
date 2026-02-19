@@ -88,3 +88,31 @@ def get_match_school_result_prompt(
     )
 
     return prompt.strip()
+
+
+def get_filter_serp_results_prompt(school: School, serp_results_list: List[dict]) -> str:
+    """Prompt for filtering SERP results: keep only links that match the school. Fills <<serp_results>> from list of {serp_data: {link, title, description}}."""
+    prompt_path = (Path(os.path.abspath(__file__)).parent.parent.joinpath("PROMPTS")
+                   .joinpath("gemini_filter_serp_results.txt"))
+
+    with open(prompt_path.__str__(), "r") as f:
+        prompt = f.read()
+
+    lines = []
+    for i, item in enumerate(serp_results_list, 1):
+        data = item.get("serp_data") or {}
+        link = data.get("link", "")
+        title = data.get("title", "")
+        desc = data.get("description", "")
+        lines.append(f"{i}. Link: {link}\n   Title: {title}\n   Description: {desc}")
+
+    serp_results_block = "\n\n".join(lines) if lines else "(no results)"
+
+    prompt = (
+        prompt.replace("<<school.lea_name>>", school.lea_name or "")
+        .replace("<<school.state_name>>", school.state_name or "")
+        .replace("<<school.region_city>>", school.region_city or "")
+        .replace("<<serp_results>>", serp_results_block)
+    )
+
+    return prompt.strip()

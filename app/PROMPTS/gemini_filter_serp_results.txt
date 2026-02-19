@@ -1,0 +1,16 @@
+You are filtering search results to find only links that are likely the correct school district's calendar.
+
+School we are looking for:
+- LEA name: "<<school.lea_name>>"
+- State: "<<school.state_name>>"
+- City/region: "<<school.region_city>>"
+
+SERP results (each has link, title, description):
+
+<<serp_results>>
+
+Compare each result with the school above. Keep only results that are likely the **correct school's** calendar (same district/LEA). Exclude results that are a different district with a similar name, or unrelated pages. Names may be abbreviated or reordered (e.g. "Morris School District" vs "Morris SD").
+Try to capture latest year.
+Return a JSON object with a single key "selected_links" whose value is a list of URLs. Use the exact "link" URL from the input for each result you keep. No explanation, only the JSON.
+
+Example: {"selected_links": ["https://example.com/calendar.pdf", "https://example.com/cal-2025"]}

@@ -350,7 +350,6 @@ def run_scrape_holidays(
                     country, state_name, region_city, lea_name, website, status,
                     "", "", "", "", "", "", "",
                 ])
-
         # Append to processed_schools.csv
         ps_write_header = not processed_schools_path.exists()
         with open(processed_schools_path, "a", newline="", encoding="utf-8") as f:
